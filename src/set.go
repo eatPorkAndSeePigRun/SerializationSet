@@ -93,10 +93,18 @@ func (s *Set) Remove(item int) bool {
 		cur = cur.next
 	}
 
-	// 对于要删除的节点也要拿锁
+	// 对于要删除的节点也要拿锁，即拿pre, cur, next三个锁
 	if cur != nil && cur.value == item {
 		cur.locker.Lock()
-		pre.next = cur.next
+		next := cur.next
+		if next == nil {
+			pre.next = next
+		} else {
+			next.locker.Lock()
+			pre.next = next
+			next.locker.Unlock()
+		}
+		cur.locker.Unlock()
 		pre.locker.Unlock()
 		return true
 	} else {

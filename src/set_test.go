@@ -86,16 +86,27 @@ func TestSet_Remove(t *testing.T) {
 	}
 }
 
-func BenchmarkSet_Add(b *testing.B) {
+// 测试在单个goroutine下，调用n次Add()，n次Contain()，n次Remove()的效率
+func BenchmarkSet_Add_Contain_Remove(b *testing.B) {
 	const n = 100000
 	set := NewSet()
 	b.ResetTimer()
 	for i := 0; i < n; i++ {
 		set.Add(rand.Intn(n))
 	}
+	for i := 0; i < n/2; i++ {
+		set.Contain(rand.Intn(n))
+	}
+	for i := 0; i < n; i++ {
+		set.Remove(rand.Intn(n))
+	}
+	for i := 0; i < n/2; i++ {
+		set.Contain(rand.Intn(n))
+	}
 }
 
-func BenchmarkSet_Add2(b *testing.B) {
+// 测试在多个goroutine下，调用n次Add()，n次Contain()，n次Remove()的效率
+func BenchmarkSet_Add_Contain_Remove2(b *testing.B) {
 	set := NewSet()
 	b.ResetTimer()
 	const n = 100000
@@ -105,6 +116,33 @@ func BenchmarkSet_Add2(b *testing.B) {
 		go func() {
 			defer wg.Done()
 			set.Add(rand.Intn(n))
+		}()
+	}
+	wg.Wait()
+
+	wg.Add(n/2)
+	for i := 0; i < n/2; i++ {
+		go func() {
+			defer wg.Done()
+			set.Contain(rand.Intn(n))
+		}()
+	}
+	wg.Wait()
+
+	wg.Add(n)
+	for i := 0; i < n; i++ {
+		go func() {
+			defer wg.Done()
+			set.Remove(rand.Intn(n))
+		}()
+	}
+	wg.Wait()
+
+	wg.Add(n/2)
+	for i := 0; i < n/2; i++ {
+		go func() {
+			defer wg.Done()
+			set.Contain(rand.Intn(n))
 		}()
 	}
 	wg.Wait()
