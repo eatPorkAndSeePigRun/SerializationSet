@@ -2,7 +2,7 @@ package main
 
 import "sync"
 
-// 有序链表，按小到大排序，其头节点为哨兵，不存在实际元素
+// 有序链表，按小到大排序，其头节点为哨兵，不存放实际元素
 type linkList struct {
 	head *node
 }
